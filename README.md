@@ -1,6 +1,6 @@
 # MERGE vs INSERT REPLACE — GPU telemetry benchmark
 
-A reproducible Databricks benchmark comparing four Delta-table write strategies for high-volume time-series ingest, motivated by NVIDIA DGX's multi-cloud GPU telemetry pipelines (AWS / Azure / OCI / GCP).
+A reproducible Databricks benchmark comparing four Delta-table write strategies for high-volume time-series ingest, built around a realistic multi-cloud GPU-telemetry workload (AWS / Azure / OCI / GCP).
 
 - `MERGE INTO`                               — the baseline
 - `INSERT ... REPLACE WHERE <predicate>`     — DBR 12.2 LTS+

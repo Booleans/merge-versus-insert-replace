@@ -20,7 +20,7 @@ set -euo pipefail
 PROFILE="${1:?usage: $0 <profile> <catalog> [scales]}"
 CATALOG="${2:?usage: $0 <profile> <catalog> [scales]}"
 SCALES="${3:-S M L}"
-SCHEMA="${SCHEMA:-dgx_benchmark}"
+SCHEMA="${SCHEMA:-gpu_bench}"
 REPEATS="${REPEATS:-3}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -93,11 +93,11 @@ JSON
 }
 
 for scale in $SCALES; do
-  submit_notebook "dgx-generate-$scale"  "01_generate"  "$scale" "serverless"
-  submit_notebook "dgx-benchmark-$scale" "02_benchmark" "$scale" "serverless"
+  submit_notebook "gpu-generate-$scale"  "01_generate"  "$scale" "serverless"
+  submit_notebook "gpu-benchmark-$scale" "02_benchmark" "$scale" "serverless"
 done
 
-submit_notebook "dgx-report" "03_report" "-" "serverless"
+submit_notebook "gpu-report" "03_report" "-" "serverless"
 
 log "Downloading report to $ROOT/report"
 databricks workspace export-dir "${WS_ROOT}/report" "$ROOT/report" -p "$PROFILE" --overwrite >&2

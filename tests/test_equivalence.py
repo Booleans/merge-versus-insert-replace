@@ -33,7 +33,7 @@ def spark() -> SparkSession:
 def cfg() -> BenchmarkConfig:
     return BenchmarkConfig(
         catalog="spark_catalog",
-        schema="dgx_bench_test",
+        schema="gpu_bench_test",
         scale="S",
         repeats=1,
         base_ts=datetime(2026, 4, 19, 0, 0, 0, tzinfo=timezone.utc),

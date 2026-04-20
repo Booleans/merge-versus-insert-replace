@@ -1,11 +1,11 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # 01 - Generate GPU telemetry
-# MAGIC Synthesizes a realistic DGX GPU telemetry fact table at scale S / M / L and builds per-scenario source tables.
+# MAGIC Synthesizes a realistic GPU-telemetry fact table at scale S / M / L and builds per-scenario source tables.
 
 # COMMAND ----------
 dbutils.widgets.text("catalog", "main")
-dbutils.widgets.text("schema", "dgx_benchmark")
+dbutils.widgets.text("schema", "gpu_bench")
 dbutils.widgets.dropdown("scale", "S", ["S", "M", "L"])
 
 # COMMAND ----------

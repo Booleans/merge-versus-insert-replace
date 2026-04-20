@@ -1,7 +1,7 @@
 resources:
   jobs:
     generate:
-      name: dgx-bench-generate-${bundle.target}
+      name: gpu-bench-generate-${bundle.target}
       job_clusters:
         - job_cluster_key: main
           new_cluster:
@@ -27,7 +27,7 @@ resources:
                 package: dbldatagen>=0.4.0
 
     benchmark:
-      name: dgx-bench-run-${bundle.target}
+      name: gpu-bench-run-${bundle.target}
       job_clusters:
         - job_cluster_key: main
           new_cluster:
@@ -49,7 +49,7 @@ resources:
               repeats: ${var.repeats}
 
     report:
-      name: dgx-bench-report-${bundle.target}
+      name: gpu-bench-report-${bundle.target}
       job_clusters:
         - job_cluster_key: main
           new_cluster:

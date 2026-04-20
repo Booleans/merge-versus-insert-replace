@@ -10,7 +10,7 @@ variables:
     default: main
   schema:
     description: Schema (auto-namespaced per user in dev)
-    default: dgx_benchmark
+    default: gpu_bench
   scale:
     description: Benchmark scale — S, M, or L
     default: S
@@ -23,7 +23,7 @@ targets:
     mode: development
     default: true
     variables:
-      schema: dgx_benchmark_${workspace.current_user.short_name}
+      schema: gpu_bench_${workspace.current_user.short_name}
   prod:
     mode: production
     variables:

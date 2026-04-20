@@ -50,7 +50,7 @@ COMPUTE_FLAVORS: list[str] = ["serverless_sql", "photon_cluster"]
 @dataclass
 class BenchmarkConfig:
     catalog: str = "main"
-    schema: str = "dgx_benchmark"
+    schema: str = "gpu_bench"
     target_table: str = "gpu_telemetry"
     baseline_table: str = "gpu_telemetry_baseline"
     results_table: str = "bench_results"

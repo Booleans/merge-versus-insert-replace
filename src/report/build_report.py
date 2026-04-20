@@ -1,4 +1,4 @@
-"""Render benchmark results to Markdown + HTML for sharing with NVIDIA DGX."""
+"""Render benchmark results to Markdown + HTML for sharing."""
 
 from __future__ import annotations
 
@@ -98,7 +98,7 @@ def _chart_per_scenario(rows: list[dict], scenario: str) -> go.Figure:
     return fig
 
 
-FINDINGS_TEMPLATE = """# DGX ingest benchmark — findings
+FINDINGS_TEMPLATE = """# GPU-telemetry ingest benchmark — findings
 
 ## Summary (TODO: fill in)
 
@@ -148,10 +148,10 @@ def build(spark: SparkSession, cfg: BenchmarkConfig) -> None:
     # HTML (tables + charts)
     html_parts = [
         "<html><head><meta charset='utf-8'>",
-        "<title>MERGE vs INSERT REPLACE — DGX benchmark</title>",
+        "<title>MERGE vs INSERT REPLACE — GPU-telemetry benchmark</title>",
         "<style>body{font-family:system-ui;margin:2rem}table{border-collapse:collapse}"
         "td,th{border:1px solid #ddd;padding:4px 8px}th{background:#f4f4f4}</style>",
-        "</head><body><h1>MERGE vs INSERT REPLACE &mdash; DGX benchmark</h1>",
+        "</head><body><h1>MERGE vs INSERT REPLACE &mdash; GPU-telemetry benchmark</h1>",
     ]
     for scen in SCENARIOS:
         scen_rows = [r for r in rows if r["scenario"] == scen]

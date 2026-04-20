@@ -5,7 +5,7 @@
 
 # COMMAND ----------
 dbutils.widgets.text("catalog", "main")
-dbutils.widgets.text("schema", "dgx_benchmark")
+dbutils.widgets.text("schema", "gpu_bench")
 dbutils.widgets.dropdown("scale", "S", ["S", "M", "L"])
 dbutils.widgets.dropdown("compute_flavor", "photon_cluster", ["photon_cluster", "serverless_sql"])
 dbutils.widgets.text("repeats", "3")
