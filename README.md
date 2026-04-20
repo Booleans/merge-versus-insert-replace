@@ -77,6 +77,58 @@ CREATE TABLE gpu_telemetry (
 
 Uniqueness is enforced on `(gpu_uuid, event_ts)` before write so MERGE can match unambiguously — this matches correct telemetry pipeline semantics.
 
+## The same write, four ways
+
+Taking the `partial_overlap` scenario (80% new rows + 20% corrections keyed on `(gpu_uuid, event_ts)`) — here is the baseline `MERGE` and the three `INSERT ... REPLACE` rewrites the benchmark runs against it.
+
+**MERGE INTO** — the baseline. One statement, two branches, a full source/target join on the key.
+
+```sql
+MERGE INTO gpu_telemetry AS t
+USING staging_source AS s
+  ON t.gpu_uuid = s.gpu_uuid AND t.event_ts = s.event_ts
+WHEN MATCHED THEN UPDATE SET *
+WHEN NOT MATCHED THEN INSERT *;
+```
+
+**INSERT ... REPLACE WHERE** (DBR 12.2 LTS+) — delete by predicate, then insert. Cheapest plan when the affected rows fall inside a bounded window; the predicate prunes files directly and no source/target join is needed. Here we hand-union the survivors (target rows in-window that aren't being corrected) with the incoming source.
+
+```sql
+INSERT INTO gpu_telemetry
+  REPLACE WHERE event_ts >= TIMESTAMP'2026-04-20 10:00:00'
+            AND event_ts <  TIMESTAMP'2026-04-20 11:00:00'
+SELECT * FROM (
+  SELECT * FROM gpu_telemetry
+    WHERE event_ts >= TIMESTAMP'2026-04-20 10:00:00'
+      AND event_ts <  TIMESTAMP'2026-04-20 11:00:00'
+      AND NOT EXISTS (
+        SELECT 1 FROM staging_source s
+         WHERE s.gpu_uuid = gpu_telemetry.gpu_uuid
+           AND s.event_ts = gpu_telemetry.event_ts
+      )
+  UNION ALL
+  SELECT * FROM staging_source
+);
+```
+
+**INSERT ... REPLACE USING (cols)** (DBR 16.3+) — dynamic key-based overwrite. The engine derives the delete set from the keys present in the source. No predicate, no hand-written anti-join, no MERGE planner.
+
+```sql
+INSERT INTO gpu_telemetry
+  REPLACE USING (gpu_uuid, event_ts)
+SELECT * FROM staging_source;
+```
+
+**INSERT ... REPLACE ON <boolean>** (DBR 17.1+) — MERGE-like match on an arbitrary boolean. Same expressive power as MERGE's `ON` clause, but as a single-branch INSERT the optimizer produces a tighter plan. `<=>` is null-safe equality.
+
+```sql
+INSERT INTO gpu_telemetry AS t
+  REPLACE ON t.gpu_uuid <=> s.gpu_uuid AND t.event_ts <=> s.event_ts
+  (SELECT * FROM staging_source) AS s;
+```
+
+All four produce an identical row set for this scenario — the benchmark's equivalence check (`tests/test_equivalence.py`) enforces that. The difference is entirely in how the engine plans the rewrite. See [`sql/strategies/`](sql/strategies/) for the 16 templates (4 scenarios × 4 strategies) actually executed.
+
 ## Reproduce
 
 ### Prerequisites
