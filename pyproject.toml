@@ -1,0 +1,27 @@
+[project]
+name = "merge-versus-insert"
+version = "0.1.0"
+description = "Benchmark MERGE vs INSERT REPLACE variants on Databricks for GPU telemetry time-series"
+requires-python = ">=3.10"
+dependencies = [
+    "dbldatagen>=0.4.0",
+    "pyspark>=3.5.0",
+    "delta-spark>=3.2.0",
+    "plotly>=5.20.0",
+    "jinja2>=3.1.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-xdist>=3.5",
+    "ruff>=0.5",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

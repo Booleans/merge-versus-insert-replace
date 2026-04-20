@@ -1,0 +1,12 @@
+resources:
+  sql_warehouses:
+    dgx_bench_warehouse:
+      name: dgx-bench-${bundle.target}
+      cluster_size: Medium
+      warehouse_type: PRO
+      enable_serverless_compute: true
+      auto_stop_mins: 10
+      tags:
+        custom_tags:
+          - key: project
+            value: merge-versus-insert

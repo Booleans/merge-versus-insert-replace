@@ -1,0 +1,30 @@
+bundle:
+  name: merge-versus-insert
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog to use
+    default: main
+  schema:
+    description: Schema (auto-namespaced per user in dev)
+    default: dgx_benchmark
+  scale:
+    description: Benchmark scale — S, M, or L
+    default: S
+  repeats:
+    description: Repeats per (scenario, strategy)
+    default: "3"
+
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      schema: dgx_benchmark_${workspace.current_user.short_name}
+  prod:
+    mode: production
+    variables:
+      scale: L

@@ -1,0 +1,75 @@
+resources:
+  jobs:
+    generate:
+      name: dgx-bench-generate-${bundle.target}
+      job_clusters:
+        - job_cluster_key: main
+          new_cluster:
+            spark_version: 18.1.x-photon-scala2.13
+            node_type_id: i3.2xlarge
+            num_workers: 4
+            data_security_mode: SINGLE_USER
+            runtime_engine: PHOTON
+            spark_conf:
+              spark.databricks.delta.optimizeWrite.enabled: "true"
+              spark.databricks.delta.autoCompact.enabled: "true"
+      tasks:
+        - task_key: generate_baseline_and_sources
+          job_cluster_key: main
+          notebook_task:
+            notebook_path: ../notebooks/01_generate.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              scale: ${var.scale}
+          libraries:
+            - pypi:
+                package: dbldatagen>=0.4.0
+
+    benchmark:
+      name: dgx-bench-run-${bundle.target}
+      job_clusters:
+        - job_cluster_key: main
+          new_cluster:
+            spark_version: 18.1.x-photon-scala2.13
+            node_type_id: i3.2xlarge
+            num_workers: 4
+            data_security_mode: SINGLE_USER
+            runtime_engine: PHOTON
+      tasks:
+        - task_key: run_on_photon_cluster
+          job_cluster_key: main
+          notebook_task:
+            notebook_path: ../notebooks/02_benchmark.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              scale: ${var.scale}
+              compute_flavor: photon_cluster
+              repeats: ${var.repeats}
+
+    report:
+      name: dgx-bench-report-${bundle.target}
+      job_clusters:
+        - job_cluster_key: main
+          new_cluster:
+            spark_version: 18.1.x-photon-scala2.13
+            node_type_id: i3.xlarge
+            num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: "local[*]"
+            custom_tags:
+              ResourceClass: SingleNode
+      tasks:
+        - task_key: build_report
+          job_cluster_key: main
+          notebook_task:
+            notebook_path: ../notebooks/03_report.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          libraries:
+            - pypi:
+                package: plotly>=5.20.0
