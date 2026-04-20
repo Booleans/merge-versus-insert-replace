@@ -11,7 +11,7 @@ Four scenarios × four strategies × three scales (10M / 100M / 1B rows) × 3 re
 
 ## Headline results
 
-Median wall-clock seconds on serverless SQL (Databricks DBR 17.1+, liquid clustering enabled, deletion vectors on, Photon). Bold = winner; `×` = multiple of MERGE.
+Median wall-clock seconds on Databricks **serverless compute version 18.0** (≈ DBR 18.0 / Spark 4.1, backed the serverless job runtime as of Feb 2026), with liquid clustering enabled, deletion vectors on, Photon. Bold = winner; `×` = multiple of MERGE.
 
 | Scenario          | Scale | MERGE | REPLACE WHERE | REPLACE USING | REPLACE ON |       Best          |
 |-------------------|:---:  |------:|--------------:|--------------:|-----------:|---------------------|
@@ -81,7 +81,7 @@ Uniqueness is enforced on `(gpu_uuid, event_ts)` before write so MERGE can match
 
 ### Prerequisites
 
-- Databricks workspace with Unity Catalog and DBR 17.1+ (for `REPLACE ON`).
+- Databricks workspace with Unity Catalog. Minimum runtime is DBR 17.1 (for `REPLACE ON`); the committed numbers were collected on **serverless compute version 18.0** (≈ DBR 18.0 / Spark 4.1) — submitted jobs use `environment_key` with `client: "3"` to pin the Spark Connect client contract, while the server-side runtime auto-tracks the current serverless release.
 - A catalog you can write to — defaults to `main`, override with `--var="catalog=<yours>"`.
 - Databricks CLI ≥ 0.218, authenticated.
 - If you hit the Terraform-checksum bug in `databricks bundle deploy` (embedded `terraform` binary with expired PGP signatures), fall back to the direct-API path in [`scripts/run_direct.sh`](scripts/run_direct.sh).
@@ -159,7 +159,8 @@ Serverless SQL, 3 repeats, all 4 scenarios × 4 strategies:
 ## Known limitations & honest disclosures
 
 - **Delta `operationMetrics` map is partially empty** — rendered as `0` / `0/-0` in the report tables for `MB written` and `files +/-` on some rows. Root cause: Spark Connect serialization of `Map<String,String>` loses some numeric fields when collected through `DESCRIBE HISTORY`. The wall-clock times are accurate; the Delta-metric capture needs to be rewritten to fetch each key individually. See [`src/common/timing.py`](src/common/timing.py).
-- **Serverless SQL only.** All measured numbers are from serverless compute. A Photon all-purpose cluster will show different absolute numbers but similar relative patterns. `resources/jobs.yml` has an unused all-purpose cluster spec commented in for that path.
+- **`dbr_version` column in `bench_results` is `"unknown"` for every row.** The harness reads `spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion")` which serverless intentionally hides. Version identification for this committed run is derived from the serverless compute release notes — **version 18.0 has been the active runtime since Feb 27 2026**. Re-runs on a classic cluster would populate the column.
+- **Serverless compute only.** All measured numbers are from serverless job compute (not a SQL warehouse). A Photon all-purpose cluster or a pinned SQL warehouse will show different absolute numbers but similar relative patterns. `resources/jobs.yml` has an unused all-purpose cluster spec commented in for that path.
 - **`dynamic_partition` MERGE SQL is simplified.** A literal "replace all rows in these buckets" via MERGE requires subqueries inside `WHEN MATCHED` conditions, which Delta doesn't support. The SQL file uses `WHEN MATCHED THEN UPDATE SET *` instead — a simplification that holds because our source for this scenario is a complete snapshot of the touched buckets (no dropped rows). This is flagged in [`sql/strategies/dynamic_partition_merge.sql`](sql/strategies/dynamic_partition_merge.sql).
 - **`REPLACE WHERE` predicate grammar is limited.** Tuple `IN (...)` is not supported; `dynamic_partition_replace_where.sql` uses the OR-of-AND equivalent. See [the INSERT docs](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-dml-insert-into) for the full supported grammar.
 - **dbldatagen collisions.** Random `event_ts` within a 10-second grid collides occasionally. Source tables are deduplicated on `(gpu_uuid, event_ts)` before write. Row counts per scale may be a few percent below the nominal 10M / 100M / 1B.
