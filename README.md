@@ -11,7 +11,7 @@ Four scenarios × four strategies × three scales (10M / 100M / 1B rows) × 3 re
 
 ## Headline results
 
-Median wall-clock seconds on Databricks **serverless compute version 18.0** (≈ DBR 18.0 / Spark 4.1, backed the serverless job runtime as of Feb 2026), with liquid clustering enabled, deletion vectors on, Photon. Bold = winner; `×` = multiple of MERGE.
+All numbers are median wall-clock seconds across 3 repeats, measured on Databricks **serverless compute version 18.0** (≈ DBR 18.0 / Spark 4.1 — the active serverless job runtime since Feb 2026). The target table has liquid clustering and deletion vectors enabled, with Photon on. In the table below, **bold** marks the winning strategy for that row; the `×` value in the *Best* column is the winner's time expressed as a multiple of MERGE.
 
 | Scenario          | Scale | MERGE | REPLACE WHERE | REPLACE USING | REPLACE ON |       Best          |
 |-------------------|:---:  |------:|--------------:|--------------:|-----------:|---------------------|
@@ -204,7 +204,7 @@ Serverless SQL, 3 repeats, all 4 scenarios × 4 strategies:
 - **Identical physical layout.** Liquid clustering on `(cloud, event_hour, gpu_uuid)` applied once to the baseline and inherited by every clone.
 - **Identical compute.** All runs in a batch use the same serverless client. DBR 17.1+.
 - **Single SQL statement.** Each strategy is one SQL statement — no Python-side tricks MERGE couldn't match.
-- **`OPTIMIZE` is excluded.** Applied once to the baseline before runs. Not counted in any strategy's time.
+- **`OPTIMIZE` is excluded from timings.** It is run after populating the baseline, after each scenario source table, and on every per-run `DEEP CLONE` before the strategy executes — so every strategy writes into a fully clustered target. No post-write `OPTIMIZE` is run, so no strategy is charged for settling the clustering afterwards.
 - **Randomized run order within a batch** to neutralize warm-cache effects.
 - **Equivalence check.** After each non-MERGE run, row count and `(gpu_uuid, event_ts)` key set are compared against the MERGE result for the same scenario; mismatches are flagged in `bench_results.notes`.
 
